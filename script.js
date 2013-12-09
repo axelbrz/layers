@@ -104,6 +104,7 @@ function drawAll() {
 function constraintString(c) {
 	var rightSide = (c.id2 !== null ? c.id2+"."+c.at2+(c.m!=1?" * "+(c.m<0?"(":"")+c.m+(c.m<0?")":""):"") : "");
 	rightSide += (c.b != 0 ? (rightSide!=""?" + ":"")+c.b : "");
+	if (rightSide == "") rightSide = "0";
 	return c.id1 + "." + c.at1 + " " + c.op + " " + rightSide;
 }
 
