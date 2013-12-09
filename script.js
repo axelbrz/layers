@@ -105,14 +105,14 @@ function addViewConstraints(solver, viewID) {
 	
 	// CenterY Constraint
 	var hgt = new c.Expression(views[viewID].atts.height);
-    var top = new c.Expression(views[viewID].atts.top);
-    var cnY = new c.Expression(views[viewID].atts.centerY);
+	var top = new c.Expression(views[viewID].atts.top);
+	var cnY = new c.Expression(views[viewID].atts.centerY);
 	solver.addConstraint(new c.Equation(hgt.divide(2).plus(top), cnY)); // height/2 + top = centerY
 	
 	// Leading and Trialing Constraints
 	var rgt = new c.Expression(views[viewID].atts.right);
-    var ldn = new c.Expression(views[viewID].atts.leading);
-    var trl = new c.Expression(views[viewID].atts.trailing);
+	var ldn = new c.Expression(views[viewID].atts.leading);
+	var trl = new c.Expression(views[viewID].atts.trailing);
 	solver.addConstraint(new c.Equation(ldn, lft)); // TODO: SEE LANGUAGE
 	solver.addConstraint(new c.Equation(trl, rgt)); // TODO: SEE LANGUAGE
 	
@@ -140,15 +140,15 @@ function createView(viewID, color) {
 
 function addParentChildContraints(solver, pid, cid) {
 	var lft = new c.Expression(views[cid].atts.left);
-    var top = new c.Expression(views[cid].atts.top);
-    var wdt = new c.Expression(views[cid].atts.width);
-    var hgt = new c.Expression(views[cid].atts.height);
-    var rgh = new c.Expression(views[cid].atts.right);
-    var btm = new c.Expression(views[cid].atts.bottom);
-    var pwdt = new c.Expression(views[pid].atts.width);
-    var phgt = new c.Expression(views[pid].atts.height);
-    solver.addConstraint(new c.Equation(lft.plus(wdt).plus(rgh), pwdt)); // left+width+right = p.width
-    solver.addConstraint(new c.Equation(top.plus(hgt).plus(btm), phgt)); // top+height+bottom = p.height
+	var top = new c.Expression(views[cid].atts.top);
+	var wdt = new c.Expression(views[cid].atts.width);
+	var hgt = new c.Expression(views[cid].atts.height);
+	var rgh = new c.Expression(views[cid].atts.right);
+	var btm = new c.Expression(views[cid].atts.bottom);
+	var pwdt = new c.Expression(views[pid].atts.width);
+	var phgt = new c.Expression(views[pid].atts.height);
+	solver.addConstraint(new c.Equation(lft.plus(wdt).plus(rgh), pwdt)); // left+width+right = p.width
+	solver.addConstraint(new c.Equation(top.plus(hgt).plus(btm), phgt)); // top+height+bottom = p.height
 }
 
 function addSubView(superViewID, subViewID) {
@@ -390,8 +390,8 @@ $(document).ready(function() {
 	
 	// TO KNOW
 	// this.solver.addEditVar(var1).addEditVar(var2).beginEdit();
-    // this.solver.suggestValue(var1, val1).suggestValue(var2, val2).resolve(); // esto ya las cambia
-    // this.solver.endEdit(); // esto dice que si o si no vas a editar mas
-    
+	// this.solver.suggestValue(var1, val1).suggestValue(var2, val2).resolve(); // esto ya las cambia
+	// this.solver.endEdit(); // esto dice que si o si no vas a editar mas
+	
 	scriptFinished = true;
 });
