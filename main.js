@@ -33,8 +33,7 @@ function example3() {
 function example4() {
 	var hola = new Layer("hola", "FF0000");
 	var chau = new Layer("chau", randomColor());
-	root.addSubView(hola);
-	hola.addSubView(chau);
+	root.addSubView(hola.addSubView(chau));
 	
 	addConstraint(hola.bottom, "==", 30); // Asignaciones en cadena
 	addConstraint(hola.top, "==", hola.bottom);
@@ -49,8 +48,7 @@ function example4() {
 function example5() {
 	var hola = new Layer("hola", "FF0000");
 	var chau = new Layer("chau", randomColor());
-	views.root.addSubView(hola);
-	views.hola.addSubView(chau);
+	root.addSubView(hola.addSubView(chau));
 	
 	addConstraint(hola.top, "==", 0); // Cuarto superior izquierdo
 	addConstraint(hola.left, "==", 0);
@@ -65,7 +63,7 @@ function example5() {
 
 function example6() {
 	var hola = new Layer("hola", "FF0000");
-	views.root.addSubView(hola);
+	root.addSubView(hola);
 	
 	addConstraint(hola.height, "==", root.height, 0.5);
 	addConstraint(hola.width, "==", root.width, 0.5);
@@ -75,7 +73,7 @@ function example6() {
 
 function example7() {
 	var hola = new Layer("hola", "FF0000");
-	views.root.addSubView(hola);
+	root.addSubView(hola);
 	
 	addConstraint(hola.top, "==", hola.bottom);
 	addConstraint(hola.height, "==", root.height, 0.5);
@@ -86,8 +84,7 @@ function example7() {
 function example8() {
 	var hola = new Layer("hola", "FF0000");
 	var chau = new Layer("chau", "0000AA");
-	views.root.addSubView(hola);
-	views.root.addSubView(chau);
+	root.addSubView(hola).addSubView(chau);
 	
 	addConstraint(hola.left, "==", hola.right);
 	addConstraint(hola.width, "==", root.width, 0.9);
@@ -104,10 +101,7 @@ function example9() { // Igual que example8 pero con mas garra (ver Constraints)
 	var hola = new Layer("hola", "FF0000");
 	var chau = new Layer("chau", "0000AA");
 	var pepe = new Layer("pepe", "00AA00");
-	
-	views.root.addSubView(hola);
-	views.root.addSubView(chau);
-	views.root.addSubView(pepe);
+	root.addSubView(hola).addSubView(chau).addSubView(pepe);
 	
 	addConstraint(hola.left, "==", hola.right);
 	addConstraint(chau.left, "==", chau.right);
@@ -130,7 +124,7 @@ function example9() { // Igual que example8 pero con mas garra (ver Constraints)
 
 function example10() { // Leading y Trailing
 	var hola = new Layer("hola", "FF0000");
-	views.root.addSubView(hola);
+	root.addSubView(hola);
 	
 	addConstraint(hola.height, "==", root.height, 0.5);
 	addConstraint(hola.top, "==", hola.bottom);
@@ -141,9 +135,7 @@ function example10() { // Leading y Trailing
 function example11() { // baseline
 	var hola = new Layer("hola", "FF0000");
 	var chau = new Layer("chau", "0000AA");
-	
-	root.addSubView(hola);
-	root.addSubView(chau);
+	root.addSubView(hola).addSubView(chau);
 	
 	addConstraint(hola.height, "==", root.height, 0.5);
 	addConstraint(hola.width, "==", root.width, 0.5);
@@ -159,8 +151,8 @@ function example11() { // baseline
 function example12() { // Inecuaciones
 	var hola = new Layer("hola", "FF0000");
 	var chau = new Layer("chau", "0000AA");
-	root.addSubView(hola);
-	root.addSubView(chau);
+	root.addSubView(hola).addSubView(chau);
+	
 	addConstraint(hola.height, "==", root.height, 0.25);
 	addConstraint(hola.width, "==", root.width, 0.25);
 	addConstraint(chau.height, "==", root.height, 0.25);

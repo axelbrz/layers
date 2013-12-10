@@ -179,6 +179,7 @@ Layer.prototype = {
 		this.div.append(subView.div.detach());
 		
 		console.log(this.id + " added " + subView.id);
+		return this;
 	},
 	
 	draw: function() {
