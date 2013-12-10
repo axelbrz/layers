@@ -81,20 +81,21 @@ function example7() {
 	addConstraint(hola.left, "==", root.centerX); // centerX
 }
 
-function example8() {
+function example8() { // Using addConstraints
 	var hola = new Layer("hola", "FF0000");
 	var chau = new Layer("chau", "0000AA");
 	root.addSubView(hola).addSubView(chau);
 	
-	addConstraint(hola.left, "==", hola.right);
-	addConstraint(hola.width, "==", root.width, 0.9);
-	addConstraint(hola.height, "==", root.height, 0.25);
-	addConstraint(hola.top, "==", root.centerY); // centerY
-	
-	addConstraint(chau.left, "==", chau.right);
-	addConstraint(chau.width, "==", root.width, 0.9);
-	addConstraint(chau.height, "==", root.height, 0.25);
-	addConstraint(chau.bottom, "==", root.centerY); // centerY
+	addConstraints([
+		[hola.left, "==", hola.right],
+		[hola.width, "==", root.width, 0.9],
+		[hola.height, "==", root.height, 0.25],
+		[hola.top, "==", root.centerY], // centerY
+		[chau.left, "==", chau.right],
+		[chau.width, "==", root.width, 0.9],
+		[chau.height, "==", root.height, 0.25],
+		[chau.bottom, "==", root.centerY] // centerY
+	]);
 }
 
 function example9() { // Igual que example8 pero con mas garra (ver Constraints), y otro layer extra
@@ -208,7 +209,7 @@ function move() {
 }
 
 function main() {
-	example13();
+	example9();
 	solver.addEditVar(root.width).addEditVar(root.height).beginEdit();
 	setInterval("move();", 50);
 	

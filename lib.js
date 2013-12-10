@@ -252,6 +252,10 @@ function addMapConstraintsTo(view, cs) {
 	for (cn in cs) addConstraint(view[cn], cs[cn][0], cs[cn][1], cs[cn][2], cs[cn][3]);
 }
 
+function addConstraints(cs) {
+	for (var i = 0; i < cs.length; i++) addConstraint(cs[i][0], cs[i][1], cs[i][2], cs[i][3], cs[i][4]);
+}
+
 
 //=================================================================
 // INITIAL CODE
