@@ -236,7 +236,6 @@ function addConstraint(at1, op, p1, p2, p3, priotity) {
 	if (typeof p1 === 'number') b = p1; else at2 = p1;
 	if (typeof p2 !== 'undefined') m = p2;
 	if (typeof p3 !== 'undefined') b = p3;
-	
 	var left = new c.Expression(at1), right = new c.Expression(b);
 	if (at2 !== null) right = c.plus(right, (new c.Expression(at2)).times(m));
 	// TODO: hacer en cassowary.js un plus como times
@@ -247,6 +246,10 @@ function addConstraint(at1, op, p1, p2, p3, priotity) {
 	
 	//var cn = { id1: id1, at1: at1, op: op, id2: id2, at2: at2, m: m, b: b }
 	//console.log("Constraint added: " + constraintString(cn));
+}
+
+function addMapConstraintsTo(view, cs) {
+	for (cn in cs) addConstraint(view[cn], cs[cn][0], cs[cn][1], cs[cn][2], cs[cn][3]);
 }
 
 
