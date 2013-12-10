@@ -203,7 +203,7 @@ Layer.prototype = {
 		var s = "";
 		if (typeof this.id != 'undefined') s += " - " + this.id + ": ";
 		for (a in this.atts) if (a.charAt(0) != '_' && a != "toString") {
-			s += a + ":" + this.atts[a].value + ", ";
+			s += a + ":" + this.atts[a].value.toFixed(2) + ", ";
 		}
 		return s;
 	}
@@ -256,14 +256,9 @@ function addConstraint(at1, op, at2, m, b, priotity) {
 var views = {};
 var root = null;
 var solver = new c.SimplexSolver();
-var scriptFinished = false;
 $(document).ready(function() {
-	console.log("Script loaded\n", false, true);
-	
 	root = new Layer("root");
 	views["root"] = root;
-	
-	setTimeout('if (scriptFinished) console.log("\\nScript done", false); else console.log("<br/>Script failed", true); ', 1);
 	/*
 	solver.addEditVar(root.width).addEditVar(root.height).beginEdit();
 	root.div.get(0).addEventListener('DOMAttrModified', function(e) {
@@ -279,19 +274,11 @@ $(document).ready(function() {
 	run();
 	
 	console.log(solver.getInternalInfo());
-	
-	console.log("");
-	console.log("Solution");
-	showViewLog();
-	
-	
-	
+	console.log("Solution:"); showViewLog();
 	drawAll();
 	
 	// TO KNOW (chain)
 	// solver.addEditVar(var1).addEditVar(var2).beginEdit();
 	// solver.suggestValue(var1, val1).suggestValue(var2, val2).resolve(); // esto ya las cambia
 	// solver.endEdit(); // esto dice que si o si no vas a editar mas
-	
-	scriptFinished = true;
 });
