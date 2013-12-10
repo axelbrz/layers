@@ -79,16 +79,6 @@ function getContrastYIQ(hexcolor){
 }
 
 
-//=================================================================
-// DEBUG
-//=================================================================
-
-function log(msg, error, clearFirst) {
-	if (error) msg = '<b style="color: red;">'+msg+'</b>';
-	if (clearFirst) $("#debugWindow").html(msg);
-	else $("#debugWindow").append("<br/>"+msg);
-}
-
 
 //=================================================================
 // VIEWS
