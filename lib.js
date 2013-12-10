@@ -222,17 +222,27 @@ function constraintString(c) {
 	return c.id1 + "." + c.at1 + " " + c.op + " " + rightSide;
 }
 
-// id1.at1 [op] id2.at * m + b  -------- with priority
-function addConstraint(at1, op, at2, m, b, priotity) {
-	if (['==','>=','<='].indexOf(op) < 0) return false;
+
+// Possible calls
+// at1 [op] b
+// at1 [op] at2
+// at1 [op] at2 * m
+// at1 [op] at2 * m + b
+// falta priority
+function addConstraint(at1, op, p1, p2, p3, priotity) {
+	if (['==','>=','<='].indexOf(op) < 0) throw "Operator must be ==, <= or >=";
+	var at2 = null, m = 1, b = 0;
+	if (typeof p1 === 'number') b = p1; else at2 = p1;
+	if (typeof p2 !== 'undefined') m = p2;
+	if (typeof p3 !== 'undefined') b = p3;
 	
 	var left = new c.Expression(at1), right = new c.Expression(b);
 	if (at2 !== null) right = c.plus(right, (new c.Expression(at2)).times(m));
 	// TODO: hacer en cassowary.js un plus como times
 	
-	if (op == '==') solver.addConstraint(new c.Equation(left, right));
-	else if (op == '<=') solver.addConstraint(new c.Inequality(left, c.LEQ, right));
-	else if (op == '>=') solver.addConstraint(new c.Inequality(left, c.GEQ, right));
+	if (op == '==') return solver.addConstraint(new c.Equation(left, right));
+	if (op == '<=') return solver.addConstraint(new c.Inequality(left, c.LEQ, right));
+	return solver.addConstraint(new c.Inequality(left, c.GEQ, right));
 	
 	//var cn = { id1: id1, at1: at1, op: op, id2: id2, at2: at2, m: m, b: b }
 	//console.log("Constraint added: " + constraintString(cn));
