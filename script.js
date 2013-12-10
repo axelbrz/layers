@@ -12,8 +12,12 @@ for (var i = 0; i < CASSOWARY_SCRIPTS.length; i++)
 
 var LayerAttributes = function(id) {
 	var atts = { top: 0, right: 0, left: 0, bottom: 0, width: 0, height: 0, centerX: 0, centerY: 0, leading: 0, trailing: 0, baseline: 0 };
-	for (att in atts) this[att] = new c.Variable({ name: id+'AA'+att, value: atts[att] }); // AA is just for debugging, the name is not necessary
-}
+	for (att in atts) {
+		var varAtt = { value: atts[att] };
+		if (typeof id !== 'undefined') varAtt.name = id+'.'+att; // name is just for debugging, it's not necessary. Use 'A' instead of '.' if it's an error when parsing
+		this[att] = new c.Variable(varAtt);
+	}
+};
 LayerAttributes.prototype = {
 	get baseline() { return this._baseline; },set baseline(baseline) { if (baseline instanceof c.Variable) this._baseline = baseline; else this._baseline.value = baseline; },
 	get bottom() { return this._bottom; },set bottom(bottom) { if (bottom instanceof c.Variable) this._bottom = bottom; else this._bottom.value = bottom; },
@@ -31,39 +35,23 @@ LayerAttributes.prototype = {
 
 
 
-//=================================================================
-// DEBUG
-//=================================================================
-
-function log(msg, error, clearFirst) {
-	if (error) msg = '<b style="color: red;">'+msg+'</b>';
-	if (clearFirst) $("#debugWindow").html(msg);
-	else $("#debugWindow").append("<br/>"+msg);
-}
-
-
-
-//=================================================================
-// VIEWS
-//=================================================================
-
-function buildNewView(_id) {
-	return { id: _id, parent: null, children: [], atts: new LayerAttributes(_id) };
-}
-
-function loadRootAttributes() {
-	views["root"].atts.height = parseInt($("#root").css("height"));
-	views["root"].atts.width = parseInt($("#root").css("width"));
+function parseConstraint(c) {
+	var re = /^([1-9]*)([a-z]*)$/;
+	var result = re.exec("876aaasdv");
+	if (result === null) return null;
 	
-	solver.addStay(views["root"].atts.top);
-	solver.addStay(views["root"].atts.left);
-	solver.addStay(views["root"].atts.right);
-	solver.addStay(views["root"].atts.bottom);
-	solver.addStay(views["root"].atts.height);
-	solver.addStay(views["root"].atts.width);
+	var obj1 = result[1];
+	var att1 = result[2];
+	var op = result[2];
+	var obj1 = result[1];
+	var att1 = result[2];
+	var scal = result[2];
+	var scal = result[2];
 	
-	addViewConstraints(solver, "root");
+	alert(result);
+	alert(result.index);
 }
+
 
 function randomID () {
 	var id;
@@ -71,7 +59,7 @@ function randomID () {
 		id = "";
 		for (var i = 0; i < 6; i++)
 			id += String.fromCharCode(Math.floor(Math.random() * 26)+97);
-	} while(id in views);
+	} while((id in views) || id == "root");
 	return id;
 }
 
@@ -90,91 +78,146 @@ function getContrastYIQ(hexcolor){
 	return (yiq >= 128) ? 'black' : 'white';
 }
 
-function setViewColor(viewID, hexColor) {
-	$("#"+viewID).css("background-color", "#"+hexColor);
-	$("#"+viewID + " .id").css("color", getContrastYIQ(hexColor));
-	return viewID;
-}
 
-function addViewConstraints(solver, viewID) {
-	// CenterX Constraint
-	var wdt = new c.Expression(views[viewID].atts.width);
-	var lft = new c.Expression(views[viewID].atts.left);
-	var cnX = new c.Expression(views[viewID].atts.centerX);
-	solver.addConstraint(new c.Equation(wdt.divide(2).plus(lft), cnX)); // width/2 + left = centerX
-	
-	// CenterY Constraint
-	var hgt = new c.Expression(views[viewID].atts.height);
-	var top = new c.Expression(views[viewID].atts.top);
-	var cnY = new c.Expression(views[viewID].atts.centerY);
-	solver.addConstraint(new c.Equation(hgt.divide(2).plus(top), cnY)); // height/2 + top = centerY
-	
-	// Leading and Trialing Constraints
-	var rgt = new c.Expression(views[viewID].atts.right);
-	var ldn = new c.Expression(views[viewID].atts.leading);
-	var trl = new c.Expression(views[viewID].atts.trailing);
-	solver.addConstraint(new c.Equation(ldn, lft)); // TODO: SEE LANGUAGE
-	solver.addConstraint(new c.Equation(trl, rgt)); // TODO: SEE LANGUAGE
-	
-	// Baseline constraint
-	var btm = new c.Expression(views[viewID].atts.bottom);
-	var bln = new c.Expression(views[viewID].atts.baseline);
-	solver.addConstraint(new c.Equation(btm, bln)); // TODO: SEE TEXTS
-}
+//=================================================================
+// DEBUG
+//=================================================================
 
-function createView(viewID, color) {
-	if (typeof viewID === 'undefined') viewID = randomID();
-	else if (viewID in views) return null; // Invalid: duplicated ID
-	
-	$("#hidden").append('<div id="'+viewID+'" class="view"><span class="id">'+viewID+'</span></div>');
-	
-	if (typeof color !== 'undefined') setViewColor(viewID, color);
-	
-	views[viewID] = buildNewView(viewID);
-	
-	addViewConstraints(solver, viewID);
-	
-	log("View created: " + viewID);
-	return viewID;
-}
-
-function addParentChildContraints(solver, pid, cid) {
-	var lft = new c.Expression(views[cid].atts.left);
-	var top = new c.Expression(views[cid].atts.top);
-	var wdt = new c.Expression(views[cid].atts.width);
-	var hgt = new c.Expression(views[cid].atts.height);
-	var rgh = new c.Expression(views[cid].atts.right);
-	var btm = new c.Expression(views[cid].atts.bottom);
-	var pwdt = new c.Expression(views[pid].atts.width);
-	var phgt = new c.Expression(views[pid].atts.height);
-	solver.addConstraint(new c.Equation(lft.plus(wdt).plus(rgh), pwdt)); // left+width+right = p.width
-	solver.addConstraint(new c.Equation(top.plus(hgt).plus(btm), phgt)); // top+height+bottom = p.height
-}
-
-function addSubView(superViewID, subViewID) {
-	if (subViewID == "root") return null; // Invalid assignation of root as a subView
-	if (!(superViewID in views) || !(subViewID in views)) return null; // Invalid IDs
-	if (views[subViewID].parent == superViewID) return false; // This parent-child relation already exists
-	if (views[subViewID].parent !== null) return null; // Invalid: Another parent-child relation exists
-	
-	addParentChildContraints(solver, superViewID, subViewID);
-	
-	views[subViewID].parent = superViewID;
-	views[superViewID].children.push(subViewID);
-	$("#"+superViewID).append($("#"+subViewID).detach());
-	log("View " + subViewID + " added to " + superViewID);
+function log(msg, error, clearFirst) {
+	if (error) msg = '<b style="color: red;">'+msg+'</b>';
+	if (clearFirst) $("#debugWindow").html(msg);
+	else $("#debugWindow").append("<br/>"+msg);
 }
 
 
-function drawAll() {
-	var atts = ["top", "left", "right", "bottom", "height", "width"];
-	for (id in views) if (id != "root") {
-		for (var i = 0; i < atts.length; i++) {
-			var att = atts[i];
-			var value = views[id].atts[att].value;
-			if (value !== null) $("#"+id).css(att, value + "px");
-		}
+//=================================================================
+// VIEWS
+//=================================================================
+
+var Layer = function(id, color) {
+	if (typeof id === 'string' && (id in views)) return null; // Invalid: duplicated ID // Check if it exists in all views (DOM+not already added)? Or check when it's added
+	
+	this.id = id;
+	this.parent = null;
+	this.children = [];
+	this.atts = new LayerAttributes(id);
+	for (att in this.atts) this[att] = this.atts[att];
+	
+	views[id] = this;
+	
+	if (id == "root") {
+		this.div = $("#root");
+	} else if (typeof id !== undefined) {
+		this.div = $('<div id="'+id+'" class="view"><span class="id">'+id+'</span></div>'); // When finished, remove the span
+	} else {
+		this.div = $('<div class="view"></div>');
 	}
+	if (typeof color !== 'undefined') this.setColor(color);
+	
+	if (id == "root") {
+		this.atts.height = parseInt(this.div.css("height")); // Don't use this.height
+		this.atts.width = parseInt(this.div.css("width")); // Don't use this.width
+		
+		solver.addStay(this.top);
+		solver.addStay(this.left);
+		solver.addStay(this.right);
+		solver.addStay(this.bottom);
+		solver.addStay(this.height);
+		solver.addStay(this.width);
+	}
+	
+	this._addViewConstraints(solver);
+	
+	log("New view: " + this.id);
+};
+Layer.prototype = {
+	setColor: function(hexColor) {
+		this.div.css("background-color", "#"+hexColor);
+		this.div.children(".id").css("color", getContrastYIQ(hexColor));
+		return this;
+	},
+
+	_addViewConstraints: function(solver) {
+		// CenterX Constraint
+		var wdt = new c.Expression(this.width);
+		var lft = new c.Expression(this.left);
+		var cnX = new c.Expression(this.centerX);
+		solver.addConstraint(new c.Equation(wdt.divide(2).plus(lft), cnX)); // width/2 + left = centerX
+		
+		// CenterY Constraint
+		var hgt = new c.Expression(this.height);
+		var top = new c.Expression(this.top);
+		var cnY = new c.Expression(this.centerY);
+		solver.addConstraint(new c.Equation(hgt.divide(2).plus(top), cnY)); // height/2 + top = centerY
+		
+		// Leading and Trialing Constraints
+		var rgt = new c.Expression(this.right);
+		var ldn = new c.Expression(this.leading);
+		var trl = new c.Expression(this.trailing);
+		solver.addConstraint(new c.Equation(ldn, lft)); // TODO: SEE LANGUAGE
+		solver.addConstraint(new c.Equation(trl, rgt)); // TODO: SEE LANGUAGE
+		
+		// Baseline constraint
+		var btm = new c.Expression(this.bottom);
+		var bln = new c.Expression(this.baseline);
+		solver.addConstraint(new c.Equation(btm, bln)); // TODO: SEE TEXTS
+	},
+
+	_addParentChildContraints: function(solver, child) {
+		var lft = new c.Expression(child.left);
+		var top = new c.Expression(child.top);
+		var wdt = new c.Expression(child.width);
+		var hgt = new c.Expression(child.height);
+		var rgh = new c.Expression(child.right);
+		var btm = new c.Expression(child.bottom);
+		var pwdt = new c.Expression(this.width);
+		var phgt = new c.Expression(this.height);
+		solver.addConstraint(new c.Equation(lft.plus(wdt).plus(rgh), pwdt)); // left+width+right = p.width
+		solver.addConstraint(new c.Equation(top.plus(hgt).plus(btm), phgt)); // top+height+bottom = p.height
+	},
+
+	addSubView: function(subView) {
+		if (subView.id == "root") return null; // Invalid assignation of root as a subView
+		if (subView.parent == this.id) return false; // This parent-child relation already exists
+		if (subView.parent !== null) return null; // Invalid: Another parent-child relation exists
+		
+		this._addParentChildContraints(solver, subView);
+		
+		subView.parent = this;
+		this.children.push(subView);
+		this.div.append(subView.div.detach());
+		
+		log(this.id + " added " + subView.id);
+	},
+	
+	draw: function() {
+		if (this.id == "root") return;
+		var atts = ["top", "left", "right", "bottom", "height", "width"];
+		for (var i = 0; i < atts.length; i++) {
+			$(this.div).css(atts[i], this.atts[atts[i]].value + "px"); // Consider using this.div
+		}
+	},
+	
+	toString2: function() {
+		var s = "";
+		if (typeof this.id != 'undefined') s += " - " + this.id + ": ";
+		for (a in this.atts) if (a.charAt(0) != '_' && a != "toString") {
+			s += a + ":" + this.atts[a].value + ", ";
+		}
+		return s;
+	}
+};
+
+function drawAll(view) {
+	if (typeof view === 'undefined') view = root;
+	view.draw();
+	for (var i = 0; i < view.children.length; i++) drawAll(view.children[i]);
+}
+
+function showViewLog(view) {
+	if (typeof view === 'undefined') view = root;
+	log(view.toString2());
+	for (var i = 0; i < view.children.length; i++) showViewLog(view.children[i]);
 }
 
 //=================================================================
@@ -189,45 +232,32 @@ function constraintString(c) {
 }
 
 // id1.at1 [op] id2.at * m + b  -------- with priority
-function addConstraint(id1, at1, op, id2, at2, m, b, priotity) {
+function addConstraint(at1, op, at2, m, b, priotity) {
 	if (['==','>=','<='].indexOf(op) < 0) return false;
-	if (id2 !== null && (!(id2 in views) || !(at2 in views[id2].atts))) return false;
-	if (!(at1 in views[id1].atts)) return false;
-	if (m == 0 || id2 === null) { m = 0; id2 = null; at2 = null; }
 	
-	var id1at = new c.Expression(views[id1].atts[at1]), right;
-	if (id2 !== null) {
-		var id2at = new c.Expression(views[id2].atts[at2]);
-		right = c.plus(id2at.times(m), b); // TODO: hacer en cassowary.js un plus como times
-	} else {
-		right = new c.Expression(b);
-	}
-	//alert(new c.Equation(id1at, right));
-	solver.addConstraint(new c.Equation(id1at, right));
+	var left = new c.Expression(at1), right = new c.Expression(b);
+	if (at2 !== null) right = c.plus(right, (new c.Expression(at2)).times(m));
+	// TODO: hacer en cassowary.js un plus como times
 	
-	var cn = { id1: id1, at1: at1, op: op, id2: id2, at2: at2, m: m, b: b }
-	log("Constraint added: " + constraintString(cn));
+	if (op == '==') solver.addConstraint(new c.Equation(left, right));
+	else if (op == '<=') solver.addConstraint(new c.Inequality(left, c.LEQ, right));
+	else if (op == '>=') solver.addConstraint(new c.Inequality(left, c.GEQ, right));
+	
+	//var cn = { id1: id1, at1: at1, op: op, id2: id2, at2: at2, m: m, b: b }
+	//log("Constraint added: " + constraintString(cn));
 }
 
-
-function logViews() {
-	for (id in views) {
-		var s = " - " + id + ": ";
-		for (a in views[id].atts) {
-			s += a + ":" + views[id].atts[a].value + ", ";
-		}
-		log(s);
-	}
-}
 
 //=================================================================
 // INIT
 //=================================================================
-var views = { "root": buildNewView("root") };
+var views = {};
+var root = null;
 
 $(document).ready(function() {
 	log("Script loaded<br/>", false, true);
-	loadRootAttributes();
+	root = new Layer("root");
+	views["root"] = root;
 });
 
 //=================================================================
@@ -237,140 +267,186 @@ $(document).ready(function() {
 
 
 function example1() {
-	addSubView("root", createView("hola", "FF0000"));
-	addConstraint("hola", "width", "==", null, null, 0, 300);
-	addConstraint("hola", "height", "==", null, null, 0, 500);
-	addConstraint("hola", "top", "==", null, null, 0, 20);
-	addConstraint("hola", "right", "==", null, null, 0, 30);
+	var hola = new Layer("hola", "FF0000");
+	root.addSubView(hola);
+	
+	addConstraint(hola.width, "==", null, 0, 300);
+	addConstraint(hola.height, "==", null, 0, 500);
+	addConstraint(hola.top, "==", null, 0, 20);
+	addConstraint(hola.right, "==", null, 0, 30);
 	// Bottom y Left los calcula
 }
 
 function example2() { // Deberia verse igual que example1()
-	addSubView("root", createView("hola", "FF0000"));
-	addConstraint("hola", "left", "==", null, null, 0, 120);
-	addConstraint("hola", "height", "==", null, null, 0, 500);
-	addConstraint("hola", "bottom", "==", null, null, 0, 80);
-	addConstraint("hola", "right", "==", null, null, 0, 30);
+	var hola = new Layer("hola", "FF0000");
+	root.addSubView(hola);
+	
+	addConstraint(hola.left, "==", null, 0, 120);
+	addConstraint(hola.height, "==", null, 0, 500);
+	addConstraint(hola.bottom, "==", null, 0, 80);
+	addConstraint(hola.right, "==", null, 0, 30);
 	// Width y Top los calcula
 }
 
 function example3() {
-	addSubView("root", createView("hola", "FF0000"));
-	addConstraint("hola", "height", "==", null, null, 0, 500);
-	addConstraint("hola", "top", "==", null, null, 0, 20);
-	addConstraint("hola", "right", "==", null, null, 0, 90);
-	addConstraint("hola", "right", "==", "hola", "left", 3, 18); // Left assignment
+	var hola = new Layer("hola", "FF0000");
+	root.addSubView(hola);
+	
+	addConstraint(hola.height, "==", null, 0, 500);
+	addConstraint(hola.top, "==", null, 0, 20);
+	addConstraint(hola.right, "==", null, 0, 90);
+	addConstraint(hola.right, "==", hola.left, 3, 18); // Left assignment
 }
 
 function example4() {
-	addSubView("root", createView("hola", "FF0000"));
-	addSubView("hola", createView("chau", randomColor()));
+	var hola = new Layer("hola", "FF0000");
+	var chau = new Layer("chau", randomColor());
+	root.addSubView(hola);
+	hola.addSubView(chau);
 	
-	addConstraint("hola", "bottom", "==", null, null, 0, 30); // Asignaciones en cadena
-	addConstraint("hola", "top", "==", "hola", "bottom", 1, 0);
-	addConstraint("hola", "right", "==", "hola", "top", 1, 0);
-	addConstraint("hola", "left", "==", "hola", "right", 1, 0);
+	addConstraint(hola.bottom, "==", null, 0, 30); // Asignaciones en cadena
+	addConstraint(hola.top, "==", hola.bottom, 1, 0);
+	addConstraint(hola.right, "==", hola.top, 1, 0);
+	addConstraint(hola.left, "==", hola.right, 1, 0);
 	
-	addConstraint("chau", "height", "==", null, null, 0, 10); // Pero faltan datos para chau
-	addConstraint("chau", "top", "==", null, null, 0, 10);
-	addConstraint("chau", "right", "==", null, null, 0, 10);
+	addConstraint(chau.height, "==", null, 0, 30); // Faltan datos para chau
+	addConstraint(chau.top, "==", null, 0, 10);
+	addConstraint(chau.right, "==", null, 0, 10);
 }
 
 function example5() {
-	addSubView("root", createView("hola", "0000FF"));
-	addSubView("hola", createView("chau", randomColor()));
+	var hola = new Layer("hola", "FF0000");
+	var chau = new Layer("chau", randomColor());
+	views.root.addSubView(hola);
+	views.hola.addSubView(chau);
 	
-	addConstraint("hola", "top", "==", null, null, 0, 0); // Cuarto superior izquierdo
-	addConstraint("hola", "left", "==", null, null, 0, 0);
-	addConstraint("hola", "width", "==", "root", "width", 0.5, 0);
-	addConstraint("hola", "height", "==", "root", "height", 0.5, 0);
+	addConstraint(hola.top, "==", null, 0, 0); // Cuarto superior izquierdo
+	addConstraint(hola.left, "==", null, 0, 0);
+	addConstraint(hola.width, "==", root.width, 0.5, 0);
+	addConstraint(hola.height, "==", root.height, 0.5, 0);
 	
-	addConstraint("chau", "bottom", "==", null, null, 0, 0); // Cuarto inferior derecho
-	addConstraint("chau", "right", "==", null, null, 0, 0);
-	addConstraint("chau", "width", "==", "hola", "width", 0.5, 0);
-	addConstraint("chau", "height", "==", "hola", "height", 0.5, 0);
+	addConstraint(chau.bottom, "==", null, 0, 0); // Cuarto inferior derecho
+	addConstraint(chau.right, "==", null, 0, 0);
+	addConstraint(chau.width, "==", hola.width, 0.5, 0);
+	addConstraint(chau.height, "==", hola.height, 0.5, 0);
 }
 
 function example6() {
-	addSubView("root", createView("hola", "FF0000"));
+	var hola = new Layer("hola", "FF0000");
+	views.root.addSubView(hola);
 	
-	addConstraint("hola", "top", "==", null, null, 0, 0);
-	addConstraint("hola", "height", "==", "root", "height", 0.5, 0);
-	addConstraint("hola", "width", "==", "root", "width", 0.5, 0);
-	addConstraint("hola", "left", "==", "hola", "right", 1, 0);
+	addConstraint(hola.height, "==", root.height, 0.5, 0);
+	addConstraint(hola.width, "==", root.width, 0.5, 0);
+	addConstraint(hola.top, "==", hola.bottom, 1, 0); // Centrado verticalmente
+	addConstraint(hola.left, "==", hola.right, 1, 0); // Centrado horizontalmente
 }
 
 function example7() {
-	addSubView("root", createView("hola", "FF0000"));
+	var hola = new Layer("hola", "FF0000");
+	views.root.addSubView(hola);
 	
-	addConstraint("hola", "top", "==", "hola", "bottom", 1, 0);
-	addConstraint("hola", "height", "==", "root", "height", 0.5, 0);
-	addConstraint("hola", "width", "==", "root", "width", 0.25, 0);
-	addConstraint("hola", "left", "==", "root", "centerX", 1, 0); // centerX
+	addConstraint(hola.top, "==", hola.bottom, 1, 0);
+	addConstraint(hola.height, "==", root.height, 0.5, 0);
+	addConstraint(hola.width, "==", root.width, 0.25, 0);
+	addConstraint(hola.left, "==", root.centerX, 1, 0); // centerX
 }
 
 function example8() {
-	addSubView("root", createView("hola", "FF0000"));
-	addSubView("root", createView("chau", "0000AA"));
+	var hola = new Layer("hola", "FF0000");
+	var chau = new Layer("chau", "0000AA");
+	views.root.addSubView(hola);
+	views.root.addSubView(chau);
 	
-	addConstraint("hola", "left", "==", "hola", "right", 1, 0);
-	addConstraint("hola", "width", "==", "root", "width", 0.9, 0);
-	addConstraint("hola", "height", "==", "root", "height", 0.25, 0);
-	addConstraint("hola", "top", "==", "root", "centerY", 1, 0); // centerY
+	addConstraint(hola.left, "==", hola.right, 1, 0);
+	addConstraint(hola.width, "==", root.width, 0.9, 0);
+	addConstraint(hola.height, "==", root.height, 0.25, 0);
+	addConstraint(hola.top, "==", root.centerY, 1, 0); // centerY
 	
-	addConstraint("chau", "left", "==", "chau", "right", 1, 0);
-	addConstraint("chau", "width", "==", "root", "width", 0.9, 0);
-	addConstraint("chau", "height", "==", "root", "height", 0.25, 0);
-	addConstraint("chau", "bottom", "==", "root", "centerY", 1, 0); // centerY
+	addConstraint(chau.left, "==", chau.right, 1, 0);
+	addConstraint(chau.width, "==", root.width, 0.9, 0);
+	addConstraint(chau.height, "==", root.height, 0.25, 0);
+	addConstraint(chau.bottom, "==", root.centerY, 1, 0); // centerY
 }
 
 function example9() { // Igual que example8 pero con mas garra (ver Constraints), y otro layer extra
-	addSubView("root", createView("hola", "FF0000"));
-	addSubView("root", createView("chau", "0000AA"));
-	addSubView("root", createView("pepe", "00AA00"));
+	var hola = new Layer("hola", "FF0000");
+	var chau = new Layer("chau", "0000AA");
+	var pepe = new Layer("pepe", "00AA00");
 	
-	addConstraint("hola", "left", "==", "hola", "right", 1, 0);
-	addConstraint("chau", "left", "==", "chau", "right", 1, 0);
+	views.root.addSubView(hola);
+	views.root.addSubView(chau);
+	views.root.addSubView(pepe);
 	
-	addConstraint("hola", "width", "==", "root", "width", 0.9, 0);
-	addConstraint("chau", "width", "==", "hola", "width", 1, 0);
+	addConstraint(hola.left, "==", hola.right, 1, 0);
+	addConstraint(chau.left, "==", chau.right, 1, 0);
 	
-	addConstraint("chau", "top", "==", "hola", "bottom", 1, 0);
-	addConstraint("chau", "bottom", "==", "hola", "top", 1, 0);
+	addConstraint(hola.width, "==", root.width, 0.9, 0);
+	addConstraint(chau.width, "==", hola.width, 1, 0);
 	
-	addConstraint("hola", "height", "==", "root", "height", 0.25, 0);
-	addConstraint("hola", "top", "==", "root", "centerY", 1, 0);
+	addConstraint(chau.top, "==", hola.bottom, 1, 0);
+	addConstraint(chau.bottom, "==", hola.top, 1, 0);
 	
-	addConstraint("pepe", "centerX", "==", "root", "centerX", 1, 0); // Usando solo centerX/Y y height y width
-	addConstraint("pepe", "centerY", "==", "root", "centerY", 1, 0);
+	addConstraint(hola.height, "==", root.height, 0.25, 0);
+	addConstraint(hola.top, "==", root.centerY, 1, 0);
 	
-	addConstraint("pepe", "height", "==", null, null, 0, 50);
-	addConstraint("pepe", "width", "==", null, null, 0, 50);
+	addConstraint(pepe.centerX, "==", root.centerX, 1, 0); // Usando solo centerX/Y y height y width
+	addConstraint(pepe.centerY, "==", root.centerY, 1, 0);
+	
+	addConstraint(pepe.height, "==", null, 0, 50);
+	addConstraint(pepe.width, "==", null, 0, 50);
 }
 
 function example10() { // Leading y Trailing
-	addSubView("root", createView("hola", "FF0000"));
+	var hola = new Layer("hola", "FF0000");
+	views.root.addSubView(hola);
 	
-	addConstraint("hola", "height", "==", "root", "height", 0.5, 0);
-	addConstraint("hola", "top", "==", "hola", "bottom", 1, 0);
-	addConstraint("hola", "leading", "==", null, null, 0, 50);
-	addConstraint("hola", "trailing", "==", null, null, 0, 200);
+	addConstraint(hola.height, "==", root.height, 0.5, 0);
+	addConstraint(hola.top, "==", hola.bottom, 1, 0);
+	addConstraint(hola.leading, "==", null, 0, 50);
+	addConstraint(hola.trailing, "==", null, 0, 200);
 }
 
 function example11() { // baseline
-	addSubView("root", createView("hola", "FF0000"));
-	addSubView("root", createView("chau", "0000AA"));
+	var hola = new Layer("hola", "FF0000");
+	var chau = new Layer("chau", "0000AA");
 	
-	addConstraint("hola", "height", "==", "root", "height", 0.5, 0);
-	addConstraint("hola", "width", "==", "root", "width", 0.5, 0);
-	addConstraint("hola", "left", "==", "hola", "right", 1, 0);
-	addConstraint("hola", "top", "==", "hola", "bottom", 1, 0);
+	root.addSubView(hola);
+	root.addSubView(chau);
 	
-	addConstraint("chau", "width", "==", null, null, 0, 50);
-	addConstraint("chau", "height", "==", null, null, 0, 50);
-	addConstraint("chau", "centerX", "==", "hola", "centerX", 1, 0);
-	addConstraint("chau", "baseline", "==", "hola", "baseline", 1, 0);
+	addConstraint(hola.height, "==", root.height, 0.5, 0);
+	addConstraint(hola.width, "==", root.width, 0.5, 0);
+	addConstraint(hola.left, "==", hola.right, 1, 0);
+	addConstraint(hola.top, "==", hola.bottom, 1, 0);
+	
+	addConstraint(chau.width, "==", null, 0, 50);
+	addConstraint(chau.height, "==", null, 0, 50);
+	addConstraint(chau.centerX, "==", hola.centerX, 1, 0);
+	addConstraint(chau.baseline, "==", hola.baseline, 1, 0);
 }
+
+function example12() { // Inecuaciones
+	var hola = new Layer("hola", "FF0000");
+	var chau = new Layer("chau", "0000AA");
+	root.addSubView(hola);
+	root.addSubView(chau);
+	addConstraint(hola.height, "==", root.height, 0.25, 0);
+	addConstraint(hola.width, "==", root.width, 0.25, 0);
+	addConstraint(chau.height, "==", root.height, 0.25, 0);
+	addConstraint(chau.width, "==", root.width, 0.25, 0);
+	addConstraint(chau.bottom, ">=", 0, 0, 0);
+	addConstraint(chau.top, ">=", 0, 0, 0);
+	addConstraint(chau.left, ">=", 0, 0, 0);
+	addConstraint(chau.right, ">=", 0, 0, 0);
+	addConstraint(hola.bottom, ">=", 0, 0, 0);
+	addConstraint(hola.top, ">=", 0, 0, 0);
+	addConstraint(hola.left, ">=", 0, 0, 0);
+	addConstraint(hola.right, ">=", 0, 0, 0);
+	addConstraint(hola.bottom, ">=", root.height, 0.5, 0);
+	addConstraint(chau.top, ">=", root.height, 0.5, 0);
+	addConstraint(hola.left, ">=", chau.left, 1, 50);
+	addConstraint(chau.left, ">=", chau.bottom, 1, 0);
+}
+
 
 
 var solver = new c.SimplexSolver();
@@ -378,11 +454,11 @@ var scriptFinished = false;
 $(document).ready(function() {
 	setTimeout('if (scriptFinished) log("<br/>Script done", false); else log("<br/>Script failed", true); ', 1);
 	
-	example11();
+	example12();
 	
 	log("");
 	log("Solution");
-	logViews();
+	showViewLog();
 	
 	document.getElementById("solver-info").innerHTML = "<pre>" + solver.getInternalInfo() + "</pre>";
 	

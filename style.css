@@ -15,9 +15,6 @@ body, div {
 }
 
 /* VIEWS */
-#hidden {
-	display: none;
-}
 #root {
 	position: relative;
 	background-color: white;
