@@ -3,18 +3,10 @@ body {
 	margin: 0px;
 	padding: 0px;
 }
-body, div {
+* {
 	font-family: Arial;
 	font-size: 10pt;
 }
-#container {
-	margin: 20px auto auto auto;
-	background-color: #FAFAFA;
-	width: 1000px;
-	padding: 10px;
-}
-
-/* VIEWS */
 #root {
 	position: relative;
 	resize:both;
@@ -37,11 +29,4 @@ body, div {
 	color: #000;
 	margin: 5px;
 	position: absolute;
-}
-
-/* DEBUG */
-#debugWindow {
-	overflow: hidden;
-	padding-left: 10px;
-	color: #333;
 }
