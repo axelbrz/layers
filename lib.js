@@ -271,7 +271,7 @@ $(document).ready(function() {
 		drawAll();
 	}, false);
 	*/
-	run();
+	main();
 	
 	console.log(solver.getInternalInfo());
 	console.log("Solution:"); showViewLog();

@@ -197,7 +197,7 @@ function move() {
 	drawAll();
 }
 
-function run() {
+function main() {
 	example9();
 	solver.addEditVar(root.width).addEditVar(root.height).beginEdit();
 	setInterval("move();", 50);
