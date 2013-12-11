@@ -111,8 +111,6 @@ var Layer = function(id, color) {
 		
 		solver.addStay(this.top);
 		solver.addStay(this.left);
-		solver.addStay(this.right);
-		solver.addStay(this.bottom);
 		solver.addStay(this.height);
 		solver.addStay(this.width);
 	}
@@ -152,27 +150,15 @@ Layer.prototype = {
 		var btm = new c.Expression(this.bottom);
 		var bln = new c.Expression(this.baseline);
 		solver.addConstraint(new c.Equation(btm, bln)); // TODO: SEE TEXTS
-	},
-
-	_addParentChildContraints: function(solver, child) {
-		var lft = new c.Expression(child.left);
-		var top = new c.Expression(child.top);
-		var wdt = new c.Expression(child.width);
-		var hgt = new c.Expression(child.height);
-		var rgh = new c.Expression(child.right);
-		var btm = new c.Expression(child.bottom);
-		var pwdt = new c.Expression(this.width);
-		var phgt = new c.Expression(this.height);
-		solver.addConstraint(new c.Equation(lft.plus(wdt).plus(rgh), pwdt)); // left+width+right = p.width
-		solver.addConstraint(new c.Equation(top.plus(hgt).plus(btm), phgt)); // top+height+bottom = p.height
+		
+		solver.addConstraint(new c.Equation(lft.plus(wdt), rgt)); // left + width = right
+		solver.addConstraint(new c.Equation(top.plus(hgt), btm)); // top + height = bottom
 	},
 
 	addSubView: function(subView) {
 		if (subView.id == "root") return null; // Invalid assignation of root as a subView
 		if (subView.parent == this.id) return false; // This parent-child relation already exists
 		if (subView.parent !== null) return null; // Invalid: Another parent-child relation exists
-		
-		this._addParentChildContraints(solver, subView);
 		
 		subView.parent = this;
 		this.children.push(subView);
@@ -182,12 +168,14 @@ Layer.prototype = {
 		return this;
 	},
 	
-	draw: function() {
+	draw: function(offsetX, offsetY) {
 		if (this.id == "root") return;
-		var atts = ["top", "left", "right", "bottom", "height", "width"];
-		for (var i = 0; i < atts.length; i++) {
-			$(this.div).css(atts[i], this.atts[atts[i]].value + "px"); // Consider using this.div
-		}
+		var atts = ["top", "left", /*"right", "bottom",*/ "height", "width"];
+		$(this.div).css("top", (this["top"].value + offsetY) + "px");
+		$(this.div).css("left", (this["left"].value + offsetX) + "px");
+		$(this.div).css("width", this["width"].value + "px");
+		$(this.div).css("height", this["height"].value + "px");
+		
 	},
 	
 	toString2: function() {
@@ -200,10 +188,14 @@ Layer.prototype = {
 	}
 };
 
-function drawAll(view) {
-	if (typeof view === 'undefined') view = root;
-	view.draw();
-	for (var i = 0; i < view.children.length; i++) drawAll(view.children[i]);
+function drawAll(view, offsetX, offsetY) {
+	if (typeof view === 'undefined') {
+		view = root;
+		offsetX = 0;
+		offsetY = 0;
+	}
+	view.draw(offsetX, offsetY);
+	for (var i = 0; i < view.children.length; i++) drawAll(view.children[i], offsetX-view.left.value, offsetY-view.top.value);
 }
 
 function showViewLog(view) {
