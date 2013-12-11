@@ -206,11 +206,12 @@ function move() {
 	root.div.css("width", w+"px").css("height", h+"px");
 	solver.suggestValue(root.width, w).suggestValue(root.height, h).resolve();
 	drawAll();
+	setTimeout("move();", 50);
 }
 
 function main() {
 	example9();
 	solver.addEditVar(root.width).addEditVar(root.height).beginEdit();
-	setInterval("move();", 50);
+	move();
 	
 }
