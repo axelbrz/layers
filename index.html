@@ -4,6 +4,17 @@
 	<link rel="stylesheet" type="text/css" href="style.css"/>
 	<script src="jquery-1.8.2.min.js"></script>
 	<script src="lib.js"></script>
-	<script src="examples.js"></script> <!-- include here the code file -->
+	<script>
+		var params = {};
+		if (window.location.search) {
+			var search = window.location.search.substr(1).split("&");
+			for (var i = 0; i < search.length; i++) {
+				var param = search[i].split("="); params[param[0]] = param[1];
+			}
+		}
+		var source = "main.js";
+		for (p in params) if (p.substr(p.length - 3, p.length) == ".js" && (typeof params[p] === 'undefined')) source = p;
+		document.write('<script src="'+source+'"></scr'+'ipt>');
+	</script>
 	<title>Cassowary/Layers</title>
 </head><body><div id="root"></div></body></html>
