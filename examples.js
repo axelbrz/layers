@@ -215,6 +215,13 @@ function main() {
 		var funcNameMaybe = "example"+window.params.example;
 		if (funcNameMaybe in window)
 			funcName = funcNameMaybe;
+		else {
+			var maxExample = 1;
+			while ("example"+maxExample in window)
+				maxExample++;
+			alert("wrong example number :)\n\nchoose between 1 and "+(maxExample - 1)+" please.");
+		}
+			
 	}
 	
 	window[funcName]();
