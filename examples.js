@@ -209,7 +209,15 @@ function move() {
 }
 
 function main() {
-	example9();
+	
+	var funcName = "example9";
+	if ("example" in window.params) {
+		var funcNameMaybe = "example"+window.params.example;
+		if (funcNameMaybe in window)
+			funcName = funcNameMaybe;
+	}
+	
+	window[funcName]();
 	solver.addEditVar(root.width).addEditVar(root.height).beginEdit();
 	move();
 	
