@@ -277,14 +277,17 @@ $(document).ready(function() {
 	if (!waitToDraw)
 		mainDone();
 	
+});
+
+function mainDone () {
+	if (!("solverLog" in window.params) || window.params.solverLog != "false") {
+		console.log(solver.getInternalInfo());
+		console.log("Solution:"); showViewLog();
+	}
+	drawAll();
+	
 	// TO KNOW (chain)
 	// solver.addEditVar(var1).addEditVar(var2).beginEdit();
 	// solver.suggestValue(var1, val1).suggestValue(var2, val2).resolve(); // esto ya las cambia
 	// solver.endEdit(); // esto dice que si o si no vas a editar mas
-});
-
-function mainDone () {
-	console.log(solver.getInternalInfo());
-	console.log("Solution:"); showViewLog();
-	drawAll();
 }

@@ -4,6 +4,8 @@ root
 		bgColor: FF0000
 		centerX = root.centerX
 		width = 0.9 * root.width
+		height = .25 * root.height
+		bottom = root.centerY
 	chau
 		bgColor: 0000AA
 		centerX = hola.centerX
