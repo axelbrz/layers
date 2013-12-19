@@ -253,6 +253,7 @@ function addConstraints(cs) {
 // INITIAL CODE
 //=================================================================
 
+var waitToDraw = false;
 var views = {};
 var root = null;
 var solver = new c.SimplexSolver();
@@ -273,12 +274,17 @@ $(document).ready(function() {
 	*/
 	main();
 	
-	console.log(solver.getInternalInfo());
-	console.log("Solution:"); showViewLog();
-	drawAll();
+	if (!waitToDraw)
+		mainDone();
 	
 	// TO KNOW (chain)
 	// solver.addEditVar(var1).addEditVar(var2).beginEdit();
 	// solver.suggestValue(var1, val1).suggestValue(var2, val2).resolve(); // esto ya las cambia
 	// solver.endEdit(); // esto dice que si o si no vas a editar mas
 });
+
+function mainDone () {
+	console.log(solver.getInternalInfo());
+	console.log("Solution:"); showViewLog();
+	drawAll();
+}

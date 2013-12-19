@@ -1,0 +1,18 @@
+# example 9
+root
+	hola
+		bgColor: FF0000
+		centerX = root.centerX
+		width = 0.9 * root.width
+	chau
+		bgColor: 0000AA
+		centerX = hola.centerX
+		width = hola.width
+		top = super.centerY # aca, super == root
+		height = hola.height
+	pepe
+		bgColor: 00AA00
+		centerX = root.centerX # Usando solo centerX/Y y height y width
+		centerY = root.centerY
+		height = 50
+		width = 50

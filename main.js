@@ -18,6 +18,7 @@ function move() {
 }
 */
 function main() {
+	
 	//var layout = new Layout(800, 600);
 	
 	var hola = new Layer("hola").setColor("FF0000");

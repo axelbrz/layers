@@ -1,0 +1,14 @@
+# example 13
+root
+	hola
+		bgColor: FF0000
+		height = 0.5 * super.height # aca, super = root
+		width = .5 * root.width # decimal sin parte entera
+		centerX = root.centerX
+		centerY = root.centerY
+	chau
+		bgColor: 0000AA
+		width = 50
+		height = 50
+		centerX = hola.centerX
+		baseline = hola.baseline
