@@ -24,7 +24,6 @@ body {
 .view {
 	position: absolute;
 	overflow: hidden;
-	box-shadow: 0px 0px 1px #000 inset; /* POR SI HAY ALGUNA BLANCA */
 	white-space: nowrap;
 	text-overflow: ellipsis;
 }
