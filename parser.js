@@ -87,6 +87,7 @@ function parseCode (code) {
 	var reProperty = /^([a-zA-Z]+)\s*:\s*([^\s].*)$/; // matches a property and it's value in an expression like "bgColor: aabbcc"
 	var reConstraint = /^([a-zA-Z][a-zA-Z0-9]*)\s*(<=|>=|=)\s*([^\s].*)$/; // matches left side, comparison operator and right side of a constraint
 	var reViewName = /^([a-zA-Z_][a-zA-Z0-9_\-]*)$/; // to check if string is a proper name (no start with numbers, no weird chars)
+	var reTextContent = /^\"(.*)\"$/; // matches a single line text content
 	
 	var lines = code.split("\n");
 	var viewStack = [root];
@@ -189,12 +190,23 @@ function parseCode (code) {
 			} else if (results = line.match(reProperty)) {
 				// we have a property (like bgColor)
 			
-				if (results[1] == "bgColor") {
-					currentView.setColor(results[2]);
+				if (results[1] == "textColor") {
+					currentView.setTextColor(results[2]);
+				} else if (results[1] == "bgColor") {
+					currentView.setBackgroundColor(results[2]);
+				} else if (results[1] == "fontStyle") {
+					currentView.setFontStyle(results[2]);
+				} else if (results[1] == "fontSize") {
+					currentView.setFontSize(results[2]);
 				} else {
-					throw "we only know bgColor right now, duuuude!";
+					throw "we only know bgColor and textColor right now, duuuude!";
 				}
 		
+			} else if (results = line.match(reTextContent)) {
+				// we have a single line text content (like "hello world! :)")
+				
+				currentView.setText(results[1]);
+			
 			} else if (reViewName.test(line)) {
 				// we have a new view to add
 				
@@ -203,7 +215,6 @@ function parseCode (code) {
 					currentView.addSubView(subView);
 					viewStack.push(subView);
 				}
-			
 			
 			} else {
 				throw "I don't understand what this is supposed to be";

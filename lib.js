@@ -78,19 +78,41 @@ function getContrastYIQ(hexcolor){
 	return (yiq >= 128) ? 'black' : 'white';
 }
 
+function getTextContentSize(text, fontStyle, fontSize) {
+	var textNode = $('<span style="display: none; font-family: '+fontStyle+'; font-size: '+fontSize+';">'+text+'</span>');
+	textNode.appendTo("body");
+	var size = { width: textNode.width(), height: textNode.height() };
+	textNode.detach();
+	return size;
+}
+
+function getTextBaseline(text, fontStyle, fontSize) {
+	// Not hidden because the position has to be deduced
+	var container = $('<span style="position: absolute; font-family: '+fontStyle+'; font-size: '+fontSize+';">A</span>')
+	var smallA = $('<span style="vertical-align: baseline; font-size: 0px;">B</span>')
+	container.append(smallA);
+	container.appendTo('body');
+	var relativeBaseline = smallA.position().top + 1; // [a, b] == [a, b+1)
+	container.detach();
+	return relativeBaseline;
+}
 
 
 //=================================================================
 // VIEWS
 //=================================================================
 
-var Layer = function(id, color) {
+var Layer = function(id, color, text) {
 	if (typeof id === 'string' && (id in views)) return null; // Invalid: duplicated ID // Check if it exists in all views (DOM+not already added)? Or check when it's added
 	
 	this.id = id;
 	this.parent = null;
 	this.children = [];
 	this.atts = new LayerAttributes(id);
+	
+	this.contentSizeConstraints = { width : null, height : null };
+	this.intrinsicConstraints = {};
+	
 	for (att in this.atts) this[att] = this.atts[att];
 	
 	views[id] = this;
@@ -99,60 +121,118 @@ var Layer = function(id, color) {
 		this.div = $("#root");
 		
 	} else if (typeof id !== undefined) {
-		this.div = $('<div id="'+id+'" class="view"><span class="id">'+id+'</span></div>'); // When finished, remove the span
+		var textContent = this.text || ('<span class="id">' + id + '</span>'); // When finished, remove the span
+		this.div = $('<div id="'+id+'" class="view">' + textContent + '</div>');
 	} else {
 		this.div = $('<div class="view"></div>');
 	}
-	if (typeof color !== 'undefined') this.setColor(color);
+	if (color) this.setBackgroundColor(color);
 	
 	if (id == "root") {
 		this.atts.height = parseInt(this.div.css("height")); // Don't use this.height
 		this.atts.width = parseInt(this.div.css("width")); // Don't use this.width
 		
-		solver.addStay(this.top);
-		solver.addStay(this.left);
-		solver.addStay(this.height);
-		solver.addStay(this.width);
+		solver.addStay(this.top, c.Strength.medium);
+		solver.addStay(this.left, c.Strength.medium);
+		solver.addStay(this.height, c.Strength.medium);
+		solver.addStay(this.width, c.Strength.medium);
 	}
+	
+	this.setText(text); // Be sure this is called first
+	this.setFontStyle("Arial");
+	this.setFontSize("20px");
 	
 	this._addViewConstraints(solver);
 	
 	console.log("New view: " + this.id);
 };
 Layer.prototype = {
-	setColor: function(hexColor) {
+	setBackgroundColor: function(hexColor) {
 		this.div.css("background-color", "#"+hexColor);
 		this.div.children(".id").css("color", getContrastYIQ(hexColor));
 		return this;
 	},
+	
+	setTextColor: function(hexColor) {
+		this.div.css("color", "#"+hexColor);
+		return this;
+	},
+	
+	_adjustContentSize: function() {
+		// TODO: think about root
+		if (this.text !== "" && !this.text) return;
+		if (this.contentSizeConstraints.width) solver.removeConstraint(this.contentSizeConstraints.width);
+		if (this.contentSizeConstraints.height) solver.removeConstraint(this.contentSizeConstraints.height);
+		
+		var size = getTextContentSize(this.text, this.fontStyle, this.fontSize);
+		this.contentSizeConstraints.width = new c.Equation(new c.Expression(this.atts.width), new c.Expression(size.width), c.Strength.weak);
+		this.contentSizeConstraints.height = new c.Equation(new c.Expression(this.atts.height), new c.Expression(size.height), c.Strength.weak);
+		solver.addConstraint(this.contentSizeConstraints.width);
+		solver.addConstraint(this.contentSizeConstraints.height);
+		
+		solver.removeConstraint(this.intrinsicConstraints.baseline)
+		var top = new c.Expression(this.top);
+		var relativeBaseline = getTextBaseline(this.text, this.fontStyle, this.fontSize);
+		relativeBaseline = new c.Expression(relativeBaseline);
+		this.intrinsicConstraints.baseline = new c.Equation(new c.Expression(this.baseline), top.plus(relativeBaseline), c.Strength.medium);
+		solver.addConstraint(this.intrinsicConstraints.baseline); // TODO: SEE TEXTS
+	},
+	
+	setText: function(text) {
+		// TODO: think about root
+		this.text = text;
+		if (text !== "" && !text) return;
+		this.div.html(text); // TODO: Check if it's better to do this in draw
+		this._adjustContentSize();
+		return this;
+	},
+	
+	setFontStyle: function(fontStyle) {
+		this.fontStyle = fontStyle || "Arial"; // TODO: Pensar fontInherit en ON para heredar hacia abajo fontStyle y fontSize
+		this.div.css("font-family", this.fontStyle);  // TODO: Check if it's better to do this in draw
+		this._adjustContentSize();
+		return this;
+	},
+	
+	setFontSize: function(fontSize) {
+		this.fontSize = fontSize || "20px";
+		this.div.css("font-size", this.fontSize);  // TODO: Check if it's better to do this in draw
+		this._adjustContentSize();
+		return this;
+	},
 
-	_addViewConstraints: function(solver) {
+	_addViewConstraints: function(solver) { // Change name to _addIntrinsicConstraints
 		// CenterX Constraint
 		var wdt = new c.Expression(this.width);
 		var lft = new c.Expression(this.left);
 		var cnX = new c.Expression(this.centerX);
-		solver.addConstraint(new c.Equation(wdt.divide(2).plus(lft), cnX)); // width/2 + left = centerX
+		this.intrinsicConstraints.centerX = new c.Equation(wdt.divide(2).plus(lft), cnX, c.Strength.medium); // width/2 + left = centerX
 		
 		// CenterY Constraint
 		var hgt = new c.Expression(this.height);
 		var top = new c.Expression(this.top);
 		var cnY = new c.Expression(this.centerY);
-		solver.addConstraint(new c.Equation(hgt.divide(2).plus(top), cnY)); // height/2 + top = centerY
+		this.intrinsicConstraints.centerY = new c.Equation(hgt.divide(2).plus(top), cnY, c.Strength.medium); // height/2 + top = centerY
 		
 		// Leading and Trialing Constraints
 		var rgt = new c.Expression(this.right);
 		var ldn = new c.Expression(this.leading);
 		var trl = new c.Expression(this.trailing);
-		solver.addConstraint(new c.Equation(ldn, lft)); // TODO: SEE LANGUAGE
-		solver.addConstraint(new c.Equation(trl, rgt)); // TODO: SEE LANGUAGE
+		this.intrinsicConstraints.leading = new c.Equation(ldn, lft, c.Strength.medium); // TODO: SEE LANGUAGE
+		this.intrinsicConstraints.trailing = new c.Equation(trl, rgt, c.Strength.medium); // TODO: SEE LANGUAGE
 		
 		// Baseline constraint
 		var btm = new c.Expression(this.bottom);
 		var bln = new c.Expression(this.baseline);
-		solver.addConstraint(new c.Equation(btm, bln)); // TODO: SEE TEXTS
+		this.intrinsicConstraints.baseline = new c.Equation(btm, bln, c.Strength.medium); // TODO: SEE TEXTS
 		
-		solver.addConstraint(new c.Equation(lft.plus(wdt), rgt)); // left + width = right
-		solver.addConstraint(new c.Equation(top.plus(hgt), btm)); // top + height = bottom
+		// Right and Bottom
+		this.intrinsicConstraints.right = new c.Equation(lft.plus(wdt), rgt, c.Strength.medium); // left + width = right
+		this.intrinsicConstraints.bottom = new c.Equation(top.plus(hgt), btm, c.Strength.medium); // top + height = bottom
+		
+		for (key in this.intrinsicConstraints) {
+			solver.addConstraint(this.intrinsicConstraints[key]);
+		}
 	},
 
 	addSubView: function(subView) {
@@ -232,9 +312,12 @@ function addConstraint(at1, op, p1, p2, p3, priotity) {
 	if (at2 !== null) right = c.plus(right, (new c.Expression(at2)).times(m));
 	// TODO: hacer en cassowary.js un plus como times
 	
-	if (op == '==') return solver.addConstraint(new c.Equation(left, right));
-	if (op == '<=') return solver.addConstraint(new c.Inequality(left, c.LEQ, right));
-	return solver.addConstraint(new c.Inequality(left, c.GEQ, right));
+	var constraint;
+	if (op == '==') constraint = new c.Equation(left, right, c.Strength.medium);
+	else if (op == '<=')  constraint = new c.Inequality(left, c.LEQ, right, c.Strength.medium);
+	else constraint = new c.Inequality(left, c.GEQ, right, c.Strength.medium);
+	solver.addConstraint(constraint);
+	return constraint;
 	
 	//var cn = { id1: id1, at1: at1, op: op, id2: id2, at2: at2, m: m, b: b }
 	//console.log("Constraint added: " + constraintString(cn));
