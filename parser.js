@@ -219,11 +219,11 @@ function parseCode (code) {
 
 function main () {
 	waitToDraw = true;
-	exampleNo = ("example" in window.params) ? window.params.example : 13;
-	$.get("example lpps/example"+exampleNo+".lpp", function (data) {
+	var fileName = ("file" in window.params) ? window.params.file : "example13";
+	$.get("example lpps/"+fileName+".lpp", function (data) {
 			parseCode(data);
 			mainDone();
 		}, "text").fail(function () {
-		alert("Can't find example"+exampleNo+".lpp!");
+		alert("Can't find "+fileName+".lpp!");
 	});
 }
