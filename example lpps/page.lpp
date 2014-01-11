@@ -1,0 +1,48 @@
+# pagina
+root
+	hola
+		bgColor: FF0000
+		centerX = root.centerX
+		width = 0.9 * root.width
+		height = .25 * root.height
+		bottom = root.centerY
+	chau
+		textColor: FFFFFF
+		bgColor: 0000AA
+		centerX = hola.centerX
+		width = hola.width
+		top = super.centerY # aca, super == root
+		height = hola.height
+		texto
+			"probar esto <b>en runtime</b>"
+			bottom = super.bottom
+			left = super.left
+	pepe
+		"Milanesa con puré ÑÁÇ░"
+		fontStyle: Times New Roman
+		fontSize: 64px
+		textColor: AA0000
+		bgColor: 00AA00
+		centerX = root.centerX # Usando solo centerX/Y y height y width
+		centerY = root.centerY
+	base
+		"Top en el baseline"
+		bgColor: FFFFFF
+		textColor: 000000
+		top = pepe.baseline
+		left = pepe.left
+	subrayado
+		bgColor: 000000
+		top = pepe.baseline
+		left = pepe.left
+		width = pepe.width
+		height = 1
+	simpat
+		#"esquina simpatica"
+		bgColor: FFFF00
+		textColor: 000000
+		top = pepe.bottom
+		left = base.right
+		fontSize: 14px
+		
+# poder hacer referencia a un layer que se encuentre más abajo y que no pinche
