@@ -21,7 +21,7 @@ function main() {
 	
 	//var layout = new Layout(800, 600);
 	
-	var hola = new Layer("hola").setColor("FF0000");
+	var hola = new Layer("hola").setBackgroundColor("FF0000");
 	var chau = new Layer("chau", "0000AA");
 	root.addSubView(hola).addSubView(chau);
 	/*const(

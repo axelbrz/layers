@@ -1,0 +1,141 @@
+# pagina
+root
+	bgColor: EEEEEE
+	chat
+		""
+		bgColor: 444444
+		left = root.left
+		top = root.top
+		width = 200
+		height = root.height
+	menuBar # pensar varias alternativas sobre poner las cosas adentro de menuBar (usando context en sus hijos)
+		""
+		bgColor: 004488
+		left = chat.right
+		top = root.top
+		right = root.right
+		height = 40
+	content
+		""
+		#bgColor: FAFAFA
+		top = menuBar.bottom
+		width = 500
+		centerX = menuBar.centerX - 30
+		bottom = root.bottom
+		
+		cover
+			""
+			bgColor: 880000
+			top = super.top
+			height = 150
+			width = super.width
+			centerX = super.centerX
+		profBar
+			""
+			bgColor: FFFFFF
+			top = cover.bottom
+			left = super.left
+			width = super.width
+			height = 40
+		picture # esto como hijo de profBar no funciona!! (ver por qué)
+			""
+			bgColor: 3388AA
+			bottom = profBar.bottom - 10
+			left = profBar.left + 10
+			height = 100
+			width = 100
+		nombre
+			"LayersPP"
+			textColor: FFFFFF
+			fontSize: 17px
+			bottom = cover.bottom - 5
+			left = picture.right + 5
+		
+		barritaIzq
+			""
+			bgColor: FFFFFF
+			fontSize: 15px
+			left = content.left
+			width = 150
+			bottom = content.bottom - 10
+			top = profBar.bottom + 10
+		
+		posts
+			""
+			bgColor: FFFFFF
+			fontSize: 15px
+			left = barritaIzq.right + 10
+			right = content.right
+			height = 150
+			top = profBar.bottom + 10
+	
+	faceLogo
+		""
+		bgColor: FFFFFF
+		width = 20
+		height = 20
+		left = content.left
+		centerY = menuBar.centerY
+		faceLogoText
+			"f"
+			bgColor: FFFFFF
+			textColor: 004488
+			centerX = super.centerX
+			baseline = super.bottom
+	search
+		""
+		bgColor: FFFFFF
+		centerY = faceLogo.centerY
+		height = faceLogo.height
+		left = faceLogo.right + 10
+		width = 200
+		searchText
+			"Buscame ésta"
+			fontSize: 14px
+			centerY = super.centerY
+			left = super.left + 5
+	postButton
+		"Post"
+		fontSize: 12px
+		textColor: FFFFFF
+		centerY = menuBar.centerY
+		right = content.right
+	homeButton
+		"Home"
+		fontSize: 12px
+		textColor: FFFFFF
+		centerY = menuBar.centerY
+		right = postButton.left - 10
+	
+	friends
+		""
+		bgColor: 666666
+		centerY = menuBar.centerY
+		left = content.right + 10
+		height = 20
+		width = 20
+	messages
+		""
+		bgColor: 666666
+		centerY = menuBar.centerY
+		left = friends.right + 10
+		height = 20
+		width = 20
+	notifs
+		""
+		bgColor: 666666
+		centerY = menuBar.centerY
+		left = messages.right + 10
+		height = 20
+		width = 20
+	
+	history
+		"Recent, etc."
+		fontSize: 12px
+		textColor: 888888
+		top = menuBar.bottom + 10
+		left = content.right + 10
+	
+	
+		
+	

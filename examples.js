@@ -172,7 +172,7 @@ function example12() { // Inecuaciones
 }
 
 function example13() { // Same as example11 but using addMapConstraintsTo
-	var hola = new Layer("hola").setColor("FF0000");
+	var hola = new Layer("hola").setBackgroundColor("FF0000");
 	var chau = new Layer("chau", "0000AA");
 	root.addSubView(hola).addSubView(chau);
 	
