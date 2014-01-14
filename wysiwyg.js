@@ -10,6 +10,11 @@ function onload () {
 		redraw();
 	};
 	
+	document.getElementById("separation").oninput = function () {
+		separationDistanceAbsolute = this.value;
+		redraw();
+	};
+	
 	cnvs = document.getElementById("mainCanvas");
 	ctx = cnvs.getContext("2d");
 	
@@ -87,7 +92,28 @@ function redraw () {
 	separationTranslation.y = Math.abs(Math.cos(angle)) * separationDistanceVisible;
 	
 	
-	root.draw();
+	var
+		level = 0,
+		oldStack = [],
+		newStack = [root];
+	
+	while (newStack.length > 0) {
+		
+		oldStack = newStack;
+		newStack = [];
+		
+		for (var i = 0; i < oldStack.length; i++) {
+			oldStack[i].draw(level);
+			newStack = newStack.concat(oldStack[i].children);
+		}
+		
+		level++;
+
+	}
+	
+	// root.draw();
+	// root.children[0].draw(0, 0, 1);
+	// root.children[1].draw(0, 0, 1);
 	
 	// restore from first transform (make content fit nicely and in the middle)
 	ctx.restore();
@@ -101,17 +127,15 @@ function Rect (x, y, w, h) {
 	this.h = h;
 }
 
-function Node () {
+function Node (parent) {
+	this.parent = parent || null;
 	this.rect = false;
 	this.children = [];
 	this.color = false;
 	
-	this.draw = function (offsetX, offsetY, level) {
+	this.draw = function (level) {
 		level = level || 0;
-		offsetX = offsetX || 0;
-		offsetY = offsetY || 0;
-		offsetX += this.rect.x;
-		offsetY += this.rect.y;
+		var offset = this.offset();
 		
 		ctx.save();
 		ctx.translate(level * separationTranslation.x, level * separationTranslation.y);
@@ -119,27 +143,32 @@ function Node () {
 		
 		
 		ctx.fillStyle = this.color+"";
-		ctx.fillRect(offsetX, offsetY, this.rect.w, this.rect.h);
+		ctx.fillRect(offset.x, offset.y, this.rect.w, this.rect.h);
 		ctx.strokeStyle = this.color.lighterBy(-0.25)+"";
 		ctx.lineWidth = 1.5;
-		ctx.strokeRect(offsetX, offsetY, this.rect.w, this.rect.h);
+		ctx.strokeRect(offset.x, offset.y, this.rect.w, this.rect.h);
 		
 		for (var i = 0; i < this.children.length; i++) {
 			ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
-			ctx.fillRect(offsetX + this.children[i].rect.x, offsetY + this.children[i].rect.y, this.children[i].rect.w, this.children[i].rect.h);
+			ctx.fillRect(offset.x + this.children[i].rect.x, offset.y + this.children[i].rect.y, this.children[i].rect.w, this.children[i].rect.h);
 		}
 		
-		// ctx.save();
-		// ctx.translate(50, 50);
 		
 		ctx.restore();
 		
-		for (var i = 0; i < this.children.length; i++) {
-			this.children[i].draw(offsetX, offsetY, level + 1);
-		}
 		
-		// ctx.restore();
+		// for (var i = 0; i < this.children.length; i++) {
+		// 	this.children[i].draw(offsetX, offsetY, level + 1);
+		// }
+		
 	};
+	
+	this.offset = function () {
+		var baseOffset = this.parent ? this.parent.offset() : { "x": 0, "y": 0 };
+		baseOffset.x += this.rect.x;
+		baseOffset.y += this.rect.y;
+		return baseOffset;
+	}
 }
 
 function Color (r, g, b, a) {
@@ -174,6 +203,11 @@ function makeTestCase () {
 		n.rect = new Rect(x, y, w, h);
 		n.children = children;
 		n.color = color;
+		
+		for (var i = 0; i < children.length; i++) {
+			children[i].parent = n;
+		}
+		
 		return n;
 	}
 	
@@ -194,6 +228,22 @@ function makeTestCase () {
 						new Color(0, 1, 0),
 						85, 20, 120, 50,
 						[]
+					),
+					makeNode(
+						new Color(1, 0, 1),
+						100, 100, 150, 130,
+						[
+							makeNode(
+								new Color(0, 0, 1),
+								40, 10, 40, 30,
+								[]
+							),
+							makeNode(
+								new Color(0, 1, 0),
+								45, 50, 30, 70,
+								[]
+							)
+						]
 					)
 				]
 				
@@ -206,6 +256,24 @@ function makeTestCase () {
 						new Color(1, 0, 0),
 						10, 10, 60, 80,
 						[]
+					),
+					makeNode(
+						new Color(0, 1, 0),
+						95, 50, 230, 90,
+						[
+							makeNode(
+								new Color(0, 1, 1),
+								10, 10, 50, 60,
+								[
+								]
+							),
+							makeNode(
+								new Color(1, 0, 1),
+								110, 10, 30, 50,
+								[
+								]
+							)
+						]
 					)
 				]
 			)
