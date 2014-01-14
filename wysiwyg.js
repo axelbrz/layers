@@ -5,7 +5,7 @@ var angle = 0;
 
 function onload () {
 	
-	document.getElementById("angle").onchange = function () {
+	document.getElementById("angle").oninput = function () {
 		angle = -this.value;
 		redraw();
 	};
